@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ranking Content by Decline Risk — A Refresh-Priority Model on the FlyRank Warehouse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FAF9F5;
+    --ink:#1C1F26;
+    --ink-soft:#4B5157;
+    --line:#DFDCD3;
+    --accent:#1B4B43;
+    --accent-soft:#E4EEEA;
+    --warn:#8A5A2B;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    font-size:17px;
+    line-height:1.7;
+  }
+  h1,h2,h3{
+    font-family:'Source Serif 4',Georgia,serif;
+    font-weight:600;
+    line-height:1.22;
+    color:var(--ink);
+  }
+  .wrap{max-width:740px;margin:0 auto;padding:0 24px;}
+  header.hero{
+    border-bottom:1px solid var(--line);
+    padding:72px 0 40px;
+  }
+  header.hero .kicker{
+    color:var(--accent);
+    font-size:14px;
+    font-weight:500;
+    margin-bottom:14px;
+  }
+  header.hero h1{
+    font-size:40px;
+    letter-spacing:-0.01em;
+    margin:0 0 18px;
+  }
+  header.hero .dek{
+    font-size:19px;
+    color:var(--ink-soft);
+    max-width:620px;
+    margin:0 0 24px;
+    font-family:'Source Serif 4',serif;
+    font-weight:400;
+  }
+  header.hero .meta{
+    font-size:14px;
+    color:var(--ink-soft);
+  }
+  header.hero .meta span{color:var(--ink);}
+  .stat-row{
+    display:flex;
+    gap:0;
+    margin-top:36px;
+    border-top:1px solid var(--line);
+    padding-top:24px;
+  }
+  .stat{
+    flex:1;
+    padding-right:20px;
+  }
+  .stat .num{
+    font-family:'Source Serif 4',serif;
+    font-size:29px;
+    font-weight:600;
+    color:var(--accent);
+    display:block;
+  }
+  .stat .label{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-top:4px;
+  }
+
+  /* Table of contents — restyled as a simple academic-style index */
+  nav.toc{
+    padding:30px 0 34px;
+    border-bottom:1px solid var(--line);
+  }
+  nav.toc .toc-title{
+    font-family:'Source Serif 4',serif;
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:0.02em;
+    color:var(--ink-soft);
+    margin-bottom:14px;
+  }
+  nav.toc ol{
+    list-style:none;
+    margin:0;
+    padding:0;
+    counter-reset:toc-counter;
+  }
+  nav.toc li{
+    counter-increment:toc-counter;
+    margin-bottom:2px;
+  }
+  nav.toc a{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    color:var(--ink);
+    text-decoration:none;
+    font-size:15.5px;
+    padding:6px 0;
+    border-bottom:1px dotted transparent;
+  }
+  nav.toc a:hover{color:var(--accent);}
+  nav.toc a::before{
+    content:counter(toc-counter, decimal-leading-zero);
+    font-family:'Source Serif 4',serif;
+    color:var(--accent);
+    font-size:13px;
+    flex-shrink:0;
+    width:22px;
+  }
+
+  section{
+    padding:44px 0;
+    border-bottom:1px solid var(--line);
+  }
+  section:last-of-type{border-bottom:none;}
+  section h2{
+    font-size:25px;
+    margin:0 0 22px;
+  }
+  section h3{
+    font-size:18px;
+    margin:30px 0 10px;
+  }
+  p{margin:0 0 16px;text-align:justify;hyphens:auto;}
+  ul,ol{margin:0 0 16px;padding-left:22px;}
+  li{margin-bottom:6px;}
+  .callout{
+    background:var(--accent-soft);
+    border-left:3px solid var(--accent);
+    padding:16px 20px;
+    margin:20px 0;
+    font-size:15.5px;
+  }
+  .warn{
+    background:#F6EFE4;
+    border-left:3px solid var(--warn);
+    padding:16px 20px;
+    margin:20px 0;
+    font-size:15.5px;
+  }
+  table{
+    width:100%;
+    border-collapse:collapse;
+    margin:20px 0;
+    font-size:15px;
+  }
+  th,td{
+    text-align:left;
+    padding:10px 12px;
+    border-bottom:1px solid var(--line);
+  }
+  th{
+    font-weight:600;
+    color:var(--ink-soft);
+    font-size:13px;
+  }
+  tr:last-child td{border-bottom:1px solid var(--ink);}
+  code{
+    background:var(--accent-soft);
+    padding:1px 6px;
+    border-radius:3px;
+    font-size:0.9em;
+  }
+  figure{margin:24px 0;}
+  figure img{width:100%;border:1px solid var(--line);border-radius:4px;}
+  figcaption{font-size:13px;color:var(--ink-soft);margin-top:8px;}
+  .reason-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0;}
+  .reason-card{
+    border:1px solid var(--line);
+    padding:14px 16px;
+    border-radius:4px;
+  }
+  .reason-card .code{
+    font-family:'Source Serif 4',serif;
+    font-weight:600;
+    font-size:15px;
+    color:var(--accent);
+  }
+  .reason-card p{margin:6px 0 0;font-size:14px;color:var(--ink-soft);text-align:left;}
+  footer{
+    padding:48px 0 80px;
+    font-size:14px;
+    color:var(--ink-soft);
+  }
+  footer a{color:var(--accent);}
+  a{color:var(--accent);}
+  @media (max-width:600px){
+    header.hero h1{font-size:30px;}
+    .stat-row{flex-direction:column;gap:16px;}
+    .reason-grid{grid-template-columns:1fr;}
+    p{text-align:left;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="kicker">FlyRank ML Internship — Capstone Research Paper</div>
+    <h1>Ranking Content by Decline Risk: A Refresh-Priority Model for Organic Search</h1>
+    <p class="dek">Which pages should a content team review first? A grouped, leakage-checked model built on the FlyRank search-and-engagement warehouse, benchmarked against a transparent rule-based baseline.</p>
+    <p class="meta"><span>Mohamed Hussein Kamal</span> · FlyRank AI Internship, ML Track · 2026</p>
+    <div class="stat-row">
+      <div class="stat"><span class="num">78.8M</span><span class="label">daily fact rows in the full warehouse</span></div>
+      <div class="stat"><span class="num">0.51</span><span class="label">honest (client-grouped) model AUC</span></div>
+      <div class="stat"><span class="num">65%</span><span class="label">Precision@20 on the flagged review queue</span></div>
+      <div class="stat"><span class="num">4.2%</span><span class="label">of rows with GA4 engagement data</span></div>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <div class="toc-title">Contents</div>
+    <ol>
+      <li><a href="#abstract">Abstract</a></li>
+      <li><a href="#intro">Introduction</a></li>
+      <li><a href="#data">Data</a></li>
+      <li><a href="#methodology">Methodology</a></li>
+      <li><a href="#results">Results</a></li>
+      <li><a href="#limitations">Limitations and Honest Framing</a></li>
+      <li><a href="#recommendations">Ranked Recommendations</a></li>
+      <li><a href="#next-steps">What I Would Test Next</a></li>
+      <li><a href="#reproducibility">Reproducibility</a></li>
+      <li><a href="#acknowledgments">Acknowledgments and Data Credit</a></li>
+    </ol>
+  </nav>
+
+  <section id="abstract">
+    <h2>Abstract</h2>
+    <p>Organizations managing large content libraries face a recurring operational question: which pages warrant editorial attention first? This study evaluates whether observable search and engagement signals, measured over a trailing ninety-day window, can rank content by decline risk more effectively than a single rule-based heuristic. Using a mid-panel month (March 2026) drawn from FlyRank's pseudonymized search warehouse, five features — mean impressions, clicks, position, engagement rate, and scroll rate — were used to predict whether a page's search visibility would decrease over the subsequent month. A logistic regression model, validated under a client-grouped split designed to prevent cross-client memorization, achieved an AUC of 0.539 and a Precision@20 of 0.65, a modest but measurable improvement over a threshold-based baseline (AUC 0.495, effectively equivalent to chance). Feature-importance analysis indicates the model relies almost entirely on position and impressions; engagement and scroll signals contributed negligibly, a result consistent with an independent finding that engagement rate did not scale with session volume in the direction conventionally assumed. These results are presented as a weak, directional decision-support signal suitable for prioritizing manual review — not as a reliable predictive instrument, and not as evidence that any specific intervention will reverse an observed decline.</p>
+  </section>
+
+  <section id="intro">
+    <h2>Introduction</h2>
+    <p>FlyRank's portfolio-wide research report, <em>The State of AI-Driven SEO</em> (April 2026), documents that content health typically peaks sixty to ninety days after publication and declines steadily thereafter, and that refreshing sufficiently mature pages can produce substantial recovery in measured visibility. That finding motivates a practical question the original report does not resolve at the individual-page level: within a library of hundreds of thousands of pages, which specific pages should a reviewer examine first, given finite editorial capacity?</p>
+    <p>This study frames that question as a ranking problem rather than a causal one. The objective is not to establish that refreshing content causes recovery — the source report's own methodology explicitly cautions against reading its correlational patterns as causal claims — but to construct a decision-support tool that orders pages by evidence of movement, and to test that tool against a simple, fully transparent baseline a team could implement without any modeling infrastructure at all.</p>
+    <p>This paper makes two specific, testable claims, and no others:</p>
+    <ol>
+      <li><strong>C1.</strong> Under a client-grouped validation split, logistic regression achieves a higher AUC and Precision@20 than a single-threshold baseline rule on identical data (§5).</li>
+      <li><strong>C2.</strong> The validation design itself is load-bearing: a naive random split overstates performance relative to a client-grouped split by a measurable margin, demonstrating that client identity, not just feature signal, was partially available to the naive model (§5).</li>
+    </ol>
+    <p>No claim is made about causal impact of any recommended action, about performance on data outside the March–April 2026 window, or about reliability for clients with limited tracking history.</p>
+  </section>
+
+  <section id="data">
+    <h2>Data</h2>
+    <p>This analysis draws on the FlyRank ML Internship warehouse release (build <code>flyrank_pseudonymized_warehouse_release_v20260703</code>), distributed as a gated dataset on Hugging Face. Two tables were used, summarized in Table 1.</p>
+    <table>
+      <tr><th>Table</th><th>Grain</th><th>Rows (full warehouse)</th><th>Role in this study</th></tr>
+      <tr><td><code>dim_content</code></td><td>one row per pseudonymized content item</td><td>519,606</td><td>schema reference</td></tr>
+      <tr><td><code>fact_content_daily_performance</code></td><td>day × client × content</td><td>78,835,655</td><td>feature and label construction</td></tr>
+    </table>
+    <p><em>Table 1.</em> Warehouse tables used in this study, with row counts from the full available history.</p>
+    <p>Model development uses a single mid-panel month, <code>month=2026-03</code>, as the feature window, with <code>month=2026-04</code> as the forward target window. This choice follows the dataset documentation's explicit guidance that the release's final calendar month functions as a sealed evaluation window and should not be used to develop label logic.</p>
+    <h3>Exclusions</h3>
+    <p>FlyRank's product-level decision outputs — <code>health_score</code>, <code>priority_score</code>, and <code>action_type</code> — are absent from this release entirely, a fact confirmed through direct schema inspection rather than assumed from documentation. Had these fields been present, they would have been excluded from the feature set regardless: incorporating a product's own decision output as a predictive feature risks the model reproducing that decision rather than discovering independent signal, a failure mode referred to here as a circular result.</p>
+    <p>All identifiers (<code>client_hash_id</code>, <code>content_hash_id</code>) are pseudonymized by FlyRank prior to release. No raw client names, URLs, domains, or query text appear in this analysis, in the underlying notebooks, or in the repository accompanying this paper.</p>
+  </section>
+
+  <section id="methodology">
+    <h2>Methodology</h2>
+    <h3>Label definition</h3>
+    <p>A content item is labeled as <strong>declining</strong> if its mean daily impressions in the April target window fall below its mean daily impressions in the March feature window. This is a directional proxy label rather than a magnitude-aware forward-looking outcome, and it is treated accordingly throughout the analysis: no claim in this paper interprets it as more than an observed change in direction.</p>
+    <h3>Features</h3>
+    <table>
+      <tr><th>Feature</th><th>Known before the decision point</th></tr>
+      <tr><td><code>avg_impressions</code> (March)</td><td>Yes — trailing window only</td></tr>
+      <tr><td><code>avg_clicks</code> (March)</td><td>Yes</td></tr>
+      <tr><td><code>avg_position</code> (March)</td><td>Yes</td></tr>
+      <tr><td><code>engagement_rate</code> — engaged sessions divided by sessions, March</td><td>Yes, derived from same-window GA4 signals</td></tr>
+      <tr><td><code>scroll_rate</code> — scroll events divided by pageviews, March</td><td>Yes, derived from same-window signals</td></tr>
+    </table>
+    <p><em>Table 2.</em> Feature set and availability audit. Every feature is constructed exclusively from the March window and contains no information from the target period.</p>
+    <h3>Baseline</h3>
+    <p>The baseline is a single, fully interpretable rule: a page is flagged <code>declining_with_demand</code> if its April impressions fall below its March impressions and its April impressions remain at or above one hundred, a floor intended to exclude noise from very low-traffic pages. This rule constitutes the benchmark that any model must exceed under identical data and identical validation to justify the additional complexity.</p>
+    <h3>Validation design</h3>
+    <p>Two validation designs were compared directly to quantify the risk of overfitting to client-specific patterns. A naive random split (eighty-twenty) permits pages belonging to the same client to appear in both the training and test partitions, which allows a model to partially memorize client-level traffic norms rather than learn signal that generalizes across clients. A <strong>client-grouped five-fold split</strong> (<code>GroupKFold</code> on <code>client_hash_id</code>) instead constrains every test fold to contain only clients absent from that fold's training data. Unless otherwise noted, all results reported in this paper use the client-grouped design.</p>
+    <h3>Leakage audit</h3>
+    <p>A deliberate leakage test preceded finalization of the feature set: a column derived directly from the target window (forward-month impressions) was temporarily added to the model, producing a sharp and implausible increase in AUC, then removed. The feature set reported here contains no field calculated from the April window, no FlyRank product-decision flag, and no field not independently confirmed to be available before the March-to-April decision point.</p>
+  </section>
+
+  <section id="results">
+    <h2>Results</h2>
+    <p>Random-selection expectation for this label — the rate at which a page is labeled declining with no model at all — is <strong>0.635 (63.5 percent)</strong> in the development sample. This is a materially imbalanced label: nearly two in three pages are tagged declining under this definition. This matters for interpretation: a naive strategy of flagging every page would already achieve 63.5 percent precision by construction, purely from the label's skew. Read against that reference point, the baseline rule's AUC of 0.495 reflects genuinely poor discrimination — worse than uninformative — while the modest AUC gains from logistic regression and random forest indicate the models are extracting a real, if weak, signal beyond the label's imbalance. Precision@20 is less directly comparable to this base rate, since it reflects rank-ordering quality among the top candidates rather than raw classification accuracy.</p>
+    <table>
+      <tr><th>Method</th><th>AUC</th><th>Precision@20</th></tr>
+      <tr><td>Baseline rule</td><td>0.495</td><td>— (does not rank continuously)</td></tr>
+      <tr><td>Logistic regression</td><td>0.539</td><td>0.65</td></tr>
+      <tr><td>Random forest</td><td>0.511</td><td>0.57</td></tr>
+    </table>
+    <p><em>Table 3.</em> Model comparison under identical client-grouped validation. Bold indicates the strongest result per column (logistic regression).</p>
+    <div class="warn">
+      <strong>Precision@20 requires the base rate to interpret correctly.</strong> With 63.5 percent of the development sample labeled declining, a random top-20 selection would be expected to score approximately 0.635 by chance alone. Logistic regression's observed 0.65 is therefore only marginally above what random selection would produce at this operating point, and should not be read as strong discriminative performance. AUC, which is rank-based and insensitive to base rate, remains the more informative metric in this table: logistic regression's 0.539 against the baseline's 0.495 reflects a real, if modest, improvement over chance-level ranking (AUC 0.5).
+    </div>
+    <p>Logistic regression was the strongest performer on this feature set, exceeding both the baseline rule and the random forest model. That a more flexible ensemble method underperformed a linear model suggests the relationship between these five features and the decline label is closer to monotonic than to a complex non-linear interaction; with only five features and a binary label, the additional flexibility of the random forest appears to introduce variance rather than capture additional structure.</p>
+    <h3>Split-honesty comparison</h3>
+    <table>
+      <tr><th>Split design</th><th>Random forest AUC</th></tr>
+      <tr><td>Naive random split</td><td>0.588</td></tr>
+      <tr><td>Client-grouped split</td><td>0.510</td></tr>
+    </table>
+    <p><em>Table 4.</em> Effect of validation design on measured performance.</p>
+    <p>The 0.078 gap between the naive and grouped splits corresponds to the memorization effect anticipated in the methodology: a portion of the naive split's apparent performance reflects the model's recognition of which client a page belongs to, rather than a signal that generalizes to a client it has not previously scored. The grouped estimate is reported as the primary result throughout this paper.</p>
+    <figure>
+      <img src="work/figures/feature_importance.png" alt="Bar chart of feature importance for the final random forest model">
+      <figcaption>Figure 1. Feature importance, final model. Position and impressions dominate; engagement and scroll signals contribute little.</figcaption>
+    </figure>
+    <p>Average position (0.52) and average impressions (0.35) jointly account for approximately eighty-seven percent of the model's decisions. Average clicks (0.06), scroll rate (0.05), and engagement rate (0.02) contribute comparatively little. This pattern is consistent with an independent signal-audit finding from this project: pages with higher session volume did not exhibit higher engagement rates, contrary to the conventional assumption, which may partly explain the limited predictive weight assigned to engagement here.</p>
+  </section>
+
+  <section id="limitations">
+    <h2>Limitations and Honest Framing</h2>
+    <div class="warn">
+      <strong>This is a pattern study, not a causal study.</strong> No result presented here demonstrates that refreshing a flagged page causes recovery in search visibility — only that pages sharing certain observed characteristics have historically moved in certain directions.
+    </div>
+    <ul>
+      <li><strong>Weak absolute discrimination.</strong> An honest AUC of 0.51 to 0.54 is only modestly better than chance. The ranked queue should be treated as a coarse triage aid, not a confident prediction.</li>
+      <li><strong>Sparse engagement coverage.</strong> Only 413,966 of 9,841,378 rows in the development month (4.2 percent) contain available GA4 data. Engagement-based reasoning is unreliable for the large majority of the panel, reflecting incomplete tracking coverage rather than an absence of engagement.</li>
+      <li><strong>Single development month.</strong> Features and labels were constructed from one mid-panel month (March to April 2026). Seasonality, one-off traffic events, and client-specific publishing cycles are not explicitly controlled for.</li>
+      <li><strong>Proxy label.</strong> The declining label reflects a directional impression change rather than a magnitude-aware or persistence-checked definition, and may capture ordinary month-to-month variance rather than a structural decline.</li>
+      <li><strong>Unbalanced client history.</strong> Clients vary substantially in available tracking history within the warehouse; predictions may be less reliable for recently onboarded clients with limited history.</li>
+    </ul>
+  </section>
+
+  <section id="recommendations">
+    <h2>Ranked Recommendations</h2>
+    <p>Pages are ranked by the model's out-of-fold predicted decline probability and assigned one of four reason codes, allowing a reviewer to assess at a glance why a given page appears in the queue.</p>
+    <div class="reason-grid">
+      <div class="reason-card"><span class="code">high_risk_visible_page</span><p>High predicted decline risk combined with meaningful traffic at stake (at least 500 impressions). Highest review priority.</p></div>
+      <div class="reason-card"><span class="code">model_decline_risk</span><p>High predicted decline risk with lower current visibility. Warrants review.</p></div>
+      <div class="reason-card"><span class="code">page_buried_with_demand</span><p>Not flagged as declining, but ranked beyond position twenty with measurable demand (at least 100 impressions) — a visibility opportunity rather than a decline signal.</p></div>
+      <div class="reason-card"><span class="code">monitor</span><p>No strong signal in either direction. No immediate action indicated.</p></div>
+    </div>
+    <h3>Required human review before acting on any flagged page</h3>
+    <ul>
+      <li>Whether the pattern reflects a sustained decline, a short-lived fluctuation, or consolidation of traffic to a related page on the same site.</li>
+      <li>Whether the page belongs to a client with limited GA4 history, in which case engagement-based reasoning behind the flag may be unreliable.</li>
+      <li>Whether a known external factor — seasonality, a site migration, or a competitive shift — better explains the pattern than a content-quality issue.</li>
+    </ul>
+    <h3>Processes that should not be automated</h3>
+    <ul>
+      <li>Publishing content changes on the basis of the model score alone; this queue is designed to prioritize review, not to trigger action directly.</li>
+      <li>Citing <code>predicted_decline_prob</code> as a confidence estimate in external communication; the model's honest AUC is too close to chance to support that framing.</li>
+      <li>Merging or removing pages on the basis of this ranking alone; consolidation decisions require independent human verification in every case.</li>
+    </ul>
+    <h3>Monitoring and retraining triggers</h3>
+    <ul>
+      <li>Re-measured grouped AUC on a subsequent month falls meaningfully below approximately 0.51, indicating the learned pattern may no longer hold.</li>
+      <li>A substantial influx of clients with traffic or GA4-coverage profiles that differ materially from the March 2026 training panel.</li>
+      <li>Schema changes in the underlying warehouse release, which have been observed to occur between build versions; any pipeline reuse should re-verify the schema before assuming column names remain stable.</li>
+      <li>Suggested retraining cadence: monthly, using an identical feature-and-label window structure and re-validated under the client-grouped split on each occasion.</li>
+    </ul>
+  </section>
+
+  <section id="next-steps">
+    <h2>What I Would Test Next</h2>
+    <ol>
+      <li><strong>A multi-month backtest.</strong> This study evaluates a single feature-to-label window (March→April 2026). Re-running the same pipeline across several consecutive month pairs would show whether the 0.51–0.54 AUC range is stable or whether it varies with seasonality and portfolio composition.</li>
+      <li><strong>A sealed, out-of-time holdout.</strong> All results reported here come from cross-validation within the same development window. A model trained on March data and evaluated once, untouched, on a later calendar month not used during any development would be a stronger test of real generalization than cross-validation alone provides.</li>
+      <li><strong>A controlled refresh experiment.</strong> Nothing in this study establishes that acting on a flagged page changes its trajectory. A small randomized pilot — flagging a page for review versus leaving a comparable page untouched — is the only way to move from a ranking claim to a causal one.</li>
+    </ol>
+  </section>
+
+  <section id="reproducibility">
+    <h2>Reproducibility</h2>
+    <p>All notebooks underlying this paper, in the sequence they were produced, are available in <a href="https://github.com/MoEissa140/FlyRank-Intern/tree/main/work/notebooks">work/notebooks/</a> of the accompanying repository:</p>
+    <ul>
+      <li><code>w01_research_question.ipynb</code> — lane selection and initial framing</li>
+      <li><code>w03_data_contract.ipynb</code> — data contract and verification queries</li>
+      <li><code>w03_feature_leakage_check.ipynb</code> — feature vector construction and leakage audit</li>
+      <li><code>w04_signal_audit.ipynb</code> — signal verification against FlyRank's own product flags</li>
+      <li><code>w04_baseline_score.ipynb</code> — baseline rule and initial ranked queue</li>
+      <li><code>w05_model.ipynb</code> — model training and baseline comparison</li>
+      <li><code>w06_validation_audit.ipynb</code> — honest-split re-validation and claim audit</li>
+      <li><code>w07_action_playbook.ipynb</code> — final ranked queue, exports, and the basis of this paper's Results and Recommendations sections</li>
+    </ul>
+    <p>Metrics and feature-importance values reported here are committed as machine-readable receipts at <code>work/outputs/final_model_metrics.json</code>. The complete repository, including the runnable pipeline, is available at <a href="https://github.com/MoEissa140/FlyRank-Intern">github.com/MoEissa140/FlyRank-Intern</a>.</p>
+  </section>
+
+  <footer id="acknowledgments">
+    <h2 style="font-size:19px;">Acknowledgments and Data Credit</h2>
+    <p>Built on the FlyRank ML Internship dataset — <a href="https://flyrank.ai" target="_blank" rel="noopener">flyrank.ai</a>. Data credit does not replace citation of the tools and guidance this project relied on.</p>
+    <h3 style="font-size:15px;margin-top:22px;">References</h3>
+    <ul>
+      <li><a href="https://developers.google.com/machine-learning/guides/rules-of-ml" target="_blank" rel="noopener">Google — Rules of Machine Learning</a></li>
+      <li><a href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GroupKFold.html" target="_blank" rel="noopener">scikit-learn — GroupKFold</a></li>
+      <li><a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html" target="_blank" rel="noopener">scikit-learn — RandomForestClassifier</a></li>
+    </ul>
+  </footer>
+</div>
+
+</body>
+</html>
